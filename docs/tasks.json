@@ -1,0 +1,594 @@
+{
+  "project": "PulseCast",
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "UI-001",
+      "title": "Landing Page UI",
+      "description": "Create the entry screen with Create and Join buttons, including footer message about headphones and permissions",
+      "category": "Frontend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Two buttons: Create Room and Join Room",
+        "Footer text: 'Works best on headphones • Allow microphone/screen audio to broadcast'",
+        "Mobile-first responsive design",
+        "Dark/light mode support"
+      ]
+    },
+    {
+      "id": "UI-002",
+      "title": "Numeric Keypad Component",
+      "description": "Build a numeric keypad for entering 6-digit room codes",
+      "category": "Frontend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["UI-001"],
+      "acceptanceCriteria": [
+        "Large, touch-friendly numeric buttons (0-9)",
+        "Display code as XXX-XXX format",
+        "Keyboard accessible",
+        "Clear/backspace functionality"
+      ]
+    },
+    {
+      "id": "UI-003",
+      "title": "Host Room Dashboard",
+      "description": "Create the host interface showing room code, listener count, latency metrics, and controls",
+      "category": "Frontend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["UI-001", "API-001"],
+      "acceptanceCriteria": [
+        "Display room code (XXX-XXX format)",
+        "Show listener count",
+        "Display latency badge (Good/Fair/Poor)",
+        "Start Broadcast button",
+        "Copy Code button",
+        "End Room button",
+        "Audio source selector (Mic/System)"
+      ]
+    },
+    {
+      "id": "UI-004",
+      "title": "Listener Room View",
+      "description": "Create the listener interface with room info, latency badge, volume control, and output selector",
+      "category": "Frontend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["UI-001", "API-002"],
+      "acceptanceCriteria": [
+        "Display room code and listener count",
+        "Latency badge (Good/Fair/Poor)",
+        "Volume slider",
+        "Output device selector (when supported)",
+        "Leave Room button",
+        "Enable audio button (autoplay handling)"
+      ]
+    },
+    {
+      "id": "UI-005",
+      "title": "Error State Components",
+      "description": "Implement error handling UI for invalid codes, room full, network issues, and autoplay blocks",
+      "category": "Frontend",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["UI-001"],
+      "acceptanceCriteria": [
+        "Invalid/expired code error",
+        "Room full (27 cap) message",
+        "Network blocked/TURN fallback message",
+        "Autoplay blocked prompt with re-enable option"
+      ]
+    },
+    {
+      "id": "API-001",
+      "title": "Room Creation API",
+      "description": "Implement POST /api/room/create endpoint that generates unique 6-digit codes",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Generate unique 6-digit numeric code (^[0-9]{6}$)",
+        "Display format: XXX-XXX",
+        "Reject ambiguous codes (000000, 123123)",
+        "Return code, region, and host JWT token",
+        "Rate limiting: 10 attempts/IP/minute",
+        "Store in Redis with 2-hour TTL"
+      ]
+    },
+    {
+      "id": "API-002",
+      "title": "Room Join API",
+      "description": "Implement POST /api/room/join endpoint that validates codes and returns WebRTC config",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["API-001"],
+      "acceptanceCriteria": [
+        "Validate 6-digit code format",
+        "Check room capacity (max 27 participants)",
+        "Check room TTL/expiry",
+        "Return role (host/listener), RTC config, token, SFU endpoint",
+        "First entrant becomes Host",
+        "Rate limiting: 60 attempts/IP/hour"
+      ]
+    },
+    {
+      "id": "API-003",
+      "title": "TURN Credentials API",
+      "description": "Implement endpoint for generating short-lived TURN credentials using HMAC",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Generate ephemeral TURN credentials",
+        "HMAC-based authentication with timestamp",
+        "Short-lived tokens (5-10 minutes)",
+        "Return STUN/TURN server config"
+      ]
+    },
+    {
+      "id": "WS-001",
+      "title": "WebSocket Server Setup",
+      "description": "Set up WebSocket server for signaling using Fastify or bare ws library",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "WebSocket endpoint at /ws",
+        "WSS support (secure)",
+        "Connection management",
+        "Message routing"
+      ]
+    },
+    {
+      "id": "WS-002",
+      "title": "Signaling Protocol Implementation",
+      "description": "Implement WebSocket message handlers for room operations and WebRTC signaling",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WS-001"],
+      "acceptanceCriteria": [
+        "create_room message handler",
+        "join_room message handler",
+        "sdp_offer/answer handlers",
+        "ice_candidate forwarding",
+        "host_handoff message",
+        "leave message",
+        "heartbeat (5s interval)",
+        "metrics collection"
+      ]
+    },
+    {
+      "id": "WS-003",
+      "title": "Presence Management",
+      "description": "Implement presence tracking and updates for room participants",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WS-002"],
+      "acceptanceCriteria": [
+        "Track all room participants",
+        "Send presence updates to Host",
+        "Handle participant disconnections",
+        "Auto-promote listener to Host on host drop",
+        "Heartbeat timeout handling"
+      ]
+    },
+    {
+      "id": "ROOM-001",
+      "title": "Room Service Implementation",
+      "description": "Implement room management service with Redis storage for ephemeral room data",
+      "category": "Backend",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Room data model: { code, createdAt, region, capacity=27, hostPeerId, listeners[], status }",
+        "Participant model: { peerId, role, joinedAt, deviceHints }",
+        "Redis storage with TTL",
+        "Room lifecycle management",
+        "Code recycling after safe TTL expiry"
+      ]
+    },
+    {
+      "id": "ROOM-002",
+      "title": "Host Handoff Feature",
+      "description": "Implement host handoff functionality allowing Host to promote a listener",
+      "category": "Backend",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["ROOM-001", "WS-002"],
+      "acceptanceCriteria": [
+        "Host can nominate a listener for handoff",
+        "Server updates roles",
+        "Listeners re-subscribe to new source seamlessly",
+        "Auto-handoff on Host disconnection"
+      ]
+    },
+    {
+      "id": "WEBRTC-001",
+      "title": "WebRTC Client Setup",
+      "description": "Implement WebRTC peer connection setup for Host and Listeners",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WS-002"],
+      "acceptanceCriteria": [
+        "RTCPeerConnection initialization",
+        "ICE candidate gathering",
+        "SDP offer/answer exchange",
+        "Connection state management",
+        "Error handling"
+      ]
+    },
+    {
+      "id": "WEBRTC-002",
+      "title": "Host Audio Capture",
+      "description": "Implement audio capture from microphone or system/tab audio for Host",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001"],
+      "acceptanceCriteria": [
+        "getUserMedia for microphone",
+        "getDisplayMedia for system/tab audio",
+        "Audio track constraints (Opus, 48kHz, mono)",
+        "AEC/NS/AGC toggles for microphone",
+        "Mute/unmute functionality"
+      ]
+    },
+    {
+      "id": "WEBRTC-003",
+      "title": "Audio Stream Publishing",
+      "description": "Implement publishing audio track to SFU from Host",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-002", "SFU-001"],
+      "acceptanceCriteria": [
+        "Add audio track to peer connection",
+        "Configure Opus codec: 48kHz, ptime=5ms, maxptime=10ms",
+        "Enable FEC, disable DTX",
+        "Bitrate constraints (32-64 kbps)",
+        "SDP munging for codec enforcement"
+      ]
+    },
+    {
+      "id": "WEBRTC-004",
+      "title": "Listener Audio Reception",
+      "description": "Implement receive-only audio subscription for Listeners",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001", "SFU-001"],
+      "acceptanceCriteria": [
+        "Receive-only track configuration",
+        "Set playoutDelayHint (0.02-0.04s) where supported",
+        "Minimal jitter buffer",
+        "Audio output routing",
+        "Volume control"
+      ]
+    },
+    {
+      "id": "WEBRTC-005",
+      "title": "DataChannel for Control",
+      "description": "Implement DataChannel for time sync, heartbeats, and host handoff",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001"],
+      "acceptanceCriteria": [
+        "Reliable DataChannel setup",
+        "Time sync ping messages",
+        "Host handoff control messages",
+        "Heartbeat messages"
+      ]
+    },
+    {
+      "id": "SFU-001",
+      "title": "SFU Server Setup",
+      "description": "Set up SFU server (mediasoup/Janus/LiveKit) for audio routing",
+      "category": "Infrastructure",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Choose and configure SFU (mediasoup recommended)",
+        "Single audio track upstream from Host",
+        "Fan-out to multiple Listeners",
+        "Co-locate with signaling server",
+        "UDP preferred, TCP/TLS fallback"
+      ]
+    },
+    {
+      "id": "SFU-002",
+      "title": "SFU Low-Latency Configuration",
+      "description": "Configure SFU for ultra-low-latency audio streaming",
+      "category": "Infrastructure",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["SFU-001"],
+      "acceptanceCriteria": [
+        "Prioritize low latency over loss concealment",
+        "Short queue configuration",
+        "No transcoding (pass-through Opus)",
+        "Server timestamp relay for sync"
+      ]
+    },
+    {
+      "id": "SYNC-001",
+      "title": "Clock Synchronization",
+      "description": "Implement NTP-style clock sync using DataChannel pings",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-005"],
+      "acceptanceCriteria": [
+        "5 quick ping probes on connection",
+        "Calculate server offset/drift using median",
+        "Estimate one-way latency"
+      ]
+    },
+    {
+      "id": "SYNC-002",
+      "title": "Playout Alignment",
+      "description": "Implement playout time alignment across listeners using server timestamps",
+      "category": "WebRTC",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["SYNC-001", "SFU-002"],
+      "acceptanceCriteria": [
+        "Calculate target playout time from server timestamp",
+        "Bias jitter buffer towards target time",
+        "Continuous drift correction",
+        "Web Audio routing for fine timing (when needed)"
+      ]
+    },
+    {
+      "id": "SYNC-003",
+      "title": "Skew Monitoring",
+      "description": "Implement skew monitoring and display sync status badge",
+      "category": "WebRTC",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["SYNC-002"],
+      "acceptanceCriteria": [
+        "Periodic tone-mark timing from listeners",
+        "Estimate relative skew between listeners",
+        "Display 'Sync: Good/Fair/Poor' badge",
+        "Target: ≤15ms (LAN), ≤35ms (WAN)"
+      ]
+    },
+    {
+      "id": "METRICS-001",
+      "title": "Client Metrics Collection",
+      "description": "Implement getStats() collection for WebRTC metrics",
+      "category": "Observability",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001"],
+      "acceptanceCriteria": [
+        "Sample getStats() every 2-5 seconds",
+        "Collect: RTT, jitter, packetsLost, jitterBufferDelay, jitterBufferEmittedCount, audioLevel",
+        "Anonymize metrics",
+        "Send to server via WebSocket"
+      ]
+    },
+    {
+      "id": "METRICS-002",
+      "title": "Room-Level Aggregates",
+      "description": "Implement server-side aggregation of room metrics",
+      "category": "Observability",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["METRICS-001"],
+      "acceptanceCriteria": [
+        "Calculate p50/p95 latency estimates",
+        "Calculate skew estimates",
+        "Track join/leave events",
+        "Monitor packet loss percentage"
+      ]
+    },
+    {
+      "id": "SEC-001",
+      "title": "JWT Token Generation",
+      "description": "Implement JWT token generation for room authentication",
+      "category": "Security",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Short-lived tokens per role (host/listener)",
+        "Room secret kept server-side",
+        "Token expiry handling",
+        "Token validation on WebSocket connection"
+      ]
+    },
+    {
+      "id": "SEC-002",
+      "title": "Rate Limiting",
+      "description": "Implement rate limiting for room creation and join attempts",
+      "category": "Security",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "10 create attempts/IP/minute",
+        "60 join attempts/IP/hour",
+        "Code enumeration detection",
+        "Basic CAPTCHA after repeated failures"
+      ]
+    },
+    {
+      "id": "SEC-003",
+      "title": "DTLS-SRTP Security",
+      "description": "Ensure DTLS-SRTP transport for media streams",
+      "category": "Security",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001"],
+      "acceptanceCriteria": [
+        "DTLS-SRTP enabled on all peer connections",
+        "Certificate validation",
+        "Secure media transport"
+      ]
+    },
+    {
+      "id": "A11Y-001",
+      "title": "Keyboard Navigation",
+      "description": "Implement keyboard navigation and focus management",
+      "category": "Accessibility",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["UI-001", "UI-002", "UI-003", "UI-004"],
+      "acceptanceCriteria": [
+        "All interactive elements keyboard accessible",
+        "Visible focus indicators",
+        "Logical tab order",
+        "WCAG 2.2 AA compliance"
+      ]
+    },
+    {
+      "id": "A11Y-002",
+      "title": "Color Contrast and Labels",
+      "description": "Ensure proper color contrast and ARIA labels",
+      "category": "Accessibility",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["UI-001"],
+      "acceptanceCriteria": [
+        "WCAG AA color contrast ratios",
+        "Proper ARIA labels",
+        "Screen reader support",
+        "Large touch targets"
+      ]
+    },
+    {
+      "id": "PERF-001",
+      "title": "Code Splitting and Lazy Loading",
+      "description": "Implement code splitting for WebRTC components",
+      "category": "Performance",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["UI-003", "UI-004"],
+      "acceptanceCriteria": [
+        "Lazy-load WebRTC bundles on /room/[code] route",
+        "First load TTI ≤ 1.5s on 4G",
+        "JS ≤ 180KB gzipped for join screen",
+        "Client components only where WebRTC is used"
+      ]
+    },
+    {
+      "id": "PERF-002",
+      "title": "CSS Optimization",
+      "description": "Optimize CSS bundle size",
+      "category": "Performance",
+      "priority": "Low",
+      "status": "completed",
+      "dependencies": ["UI-001"],
+      "acceptanceCriteria": [
+        "CSS bundle ≤ 8KB",
+        "Minimal animations",
+        "System font stack"
+      ]
+    },
+    {
+      "id": "TEST-001",
+      "title": "Functional Tests",
+      "description": "Write functional tests for room creation, joining, and error states",
+      "category": "Testing",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["API-001", "API-002", "UI-005"],
+      "acceptanceCriteria": [
+        "Test valid/invalid code entry",
+        "Test capacity cap at 27",
+        "Test host handoff",
+        "Test TURN fallback (block UDP)"
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "title": "Latency Tests",
+      "description": "Implement automated latency and sync testing",
+      "category": "Testing",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": ["SYNC-003", "WEBRTC-004"],
+      "acceptanceCriteria": [
+        "Mouth-to-ear latency measurement using chirp",
+        "Inter-listener skew measurement",
+        "Network chaos testing (1-3% loss, 20-60ms jitter)",
+        "Verify p50/p95/p99 targets met"
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "title": "Browser Compatibility Tests",
+      "description": "Test across target browsers and devices",
+      "category": "Testing",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["WEBRTC-001"],
+      "acceptanceCriteria": [
+        "Chrome, Firefox, Safari (macOS + iOS)",
+        "Android Chrome",
+        "Test on wired/Wi-Fi/4G",
+        "Feature detection for setSinkId, playoutDelayHint"
+      ]
+    },
+    {
+      "id": "INFRA-001",
+      "title": "STUN/TURN Server Setup",
+      "description": "Set up STUN/TURN servers (coturn) with ephemeral credentials",
+      "category": "Infrastructure",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Public STUN server",
+        "TURN UDP in same region",
+        "TURN TCP/TLS as fallback",
+        "Ephemeral credential generation"
+      ]
+    },
+    {
+      "id": "INFRA-002",
+      "title": "Redis Setup",
+      "description": "Set up Redis for ephemeral room and presence storage",
+      "category": "Infrastructure",
+      "priority": "High",
+      "status": "completed",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Redis instance configured",
+        "TTL support for room expiry",
+        "Connection pooling",
+        "Region-aware if multi-region"
+      ]
+    },
+    {
+      "id": "INFRA-003",
+      "title": "Deployment Configuration",
+      "description": "Configure deployment for Next.js edge and Node.js WebSocket/SFU servers",
+      "category": "Infrastructure",
+      "priority": "Medium",
+      "status": "completed",
+      "dependencies": ["WS-001", "SFU-001"],
+      "acceptanceCriteria": [
+        "Next.js on edge for static/SSR",
+        "Dedicated Node region for WebSockets & SFU",
+        "HTTPS/WSS enabled",
+        "Environment configuration"
+      ]
+    }
+  ]
+}
+
