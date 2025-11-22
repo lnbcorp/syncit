@@ -116,7 +116,13 @@ export class WebRTCClient {
     // Connection state changes
     this.pc.onconnectionstatechange = () => {
       if (this.pc) {
-        this.options.onConnectionStateChange?.(this.pc.connectionState);
+        const state = this.pc.connectionState;
+        this.options.onConnectionStateChange?.(state);
+        // Detect failed/closed states as errors
+        // RTCPeerConnection doesn't have onerror, so we handle errors through state changes
+        if (state === 'failed' || state === 'disconnected') {
+          this.options.onError?.(new Error(`WebRTC connection ${state}`));
+        }
       }
     };
 
@@ -124,6 +130,10 @@ export class WebRTCClient {
     this.pc.oniceconnectionstatechange = () => {
       if (this.pc) {
         this.options.onIceConnectionStateChange?.(this.pc.iceConnectionState);
+        // Also detect ICE connection failures as errors
+        if (this.pc.iceConnectionState === 'failed' || this.pc.iceConnectionState === 'disconnected') {
+          this.options.onError?.(new Error(`ICE connection ${this.pc.iceConnectionState}`));
+        }
       }
     };
 
@@ -140,11 +150,6 @@ export class WebRTCClient {
         configureAudioTrackForReception(event.track, this.receptionConfig);
       }
       this.options.onTrack?.(event);
-    };
-
-    // Error handling
-    this.pc.onerror = (event) => {
-      this.options.onError?.(new Error('WebRTC error occurred'));
     };
   }
 
