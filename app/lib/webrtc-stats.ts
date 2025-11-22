@@ -88,9 +88,10 @@ export async function parseWebRTCStats(stats: RTCStatsReport): Promise<WebRTCMet
       }
     }
 
-    // RTCMediaStreamTrackStats - for audio level (alternative source)
+    // RTCStats with type 'track' - for audio level (alternative source)
     if (stat.type === 'track' && stat.kind === 'audio') {
-      const track = stat as RTCMediaStreamTrackStats;
+      // TypeScript doesn't have RTCMediaStreamTrackStats, so we use RTCStats with type checking
+      const track = stat as RTCStats & { audioLevel?: number };
 
       // Audio level (if not already set)
       if (track.audioLevel !== undefined && metrics.audioLevel === undefined) {
