@@ -74,10 +74,9 @@ export async function parseWebRTCStats(stats: RTCStatsReport): Promise<WebRTCMet
     if (stat.type === 'outbound-rtp' && stat.kind === 'audio') {
       const outboundRtp = stat as RTCOutboundRtpStreamStats;
 
-      // Packets lost (for outbound, this is packets lost in transit)
-      if (outboundRtp.packetsLost !== undefined && metrics.packetsLost === undefined) {
-        metrics.packetsLost = outboundRtp.packetsLost;
-      }
+      // Note: packetsLost is not available on outbound stats
+      // Packets lost can only be measured on inbound stats (receiver side)
+      // The packetsLost metric is already collected from inbound-rtp stats above
 
       // Audio level (if available)
       if (outboundRtp.audioLevel !== undefined && metrics.audioLevel === undefined) {
