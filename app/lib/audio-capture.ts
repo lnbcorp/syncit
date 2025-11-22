@@ -51,7 +51,7 @@ export async function getSystemAudioStream(): Promise<MediaStream> {
   // getDisplayMedia requires at least one of audio or video to be true
   // Some browsers don't accept explicit video: false, so we'll request both
   // and then stop the video track after getting the stream
-  const constraints: DisplayMediaStreamConstraints = {
+  const constraints: MediaStreamConstraints = {
     audio: true,
     video: true, // Required by most browsers, we'll stop it after
   };
