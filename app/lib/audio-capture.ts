@@ -29,10 +29,6 @@ export async function getMicrophoneStream(
       autoGainControl: constraints.autoGainControl ?? true,
       sampleRate: constraints.sampleRate ?? 48000,
       channelCount: constraints.channelCount ?? 1, // Mono
-      // Opus codec preferences
-      googEchoCancellation: constraints.echoCancellation ?? true,
-      googNoiseSuppression: constraints.noiseSuppression ?? true,
-      googAutoGainControl: constraints.autoGainControl ?? true,
     },
     video: false,
   };
