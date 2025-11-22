@@ -293,12 +293,14 @@ export async function applyBitrateConstraints(
 
   // Apply bitrate constraints to all encodings
   // Note: minBitrate is not supported in RTCRtpEncodingParameters
-  // Minimum bitrate constraints are handled through SDP munging
+  // Only maxBitrate can be set on encoding parameters
+  // Minimum bitrate constraints are handled through SDP munging only
   for (const encoding of params.encodings) {
     if (maxBitrate !== undefined) {
       encoding.maxBitrate = maxBitrate;
     }
-    // minBitrate is applied via SDP munging in setBitrateConstraints function
+    // minBitrate parameter is accepted but not used here
+    // It's handled via SDP munging in setBitrateConstraints function
   }
 
   try {
