@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production-use-strong-secret';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '1h'; // Short-lived tokens: 1 hour default
+const JWT_SECRET: string = process.env.JWT_SECRET || 'change-me-in-production-use-strong-secret';
+const JWT_EXPIRY: string = process.env.JWT_EXPIRY || '1h'; // Short-lived tokens: 1 hour default
 
 export interface TokenPayload {
   roomCode: string;
@@ -15,7 +15,7 @@ export interface TokenPayload {
 export function generateToken(payload: TokenPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRY,
-  });
+  } as jwt.SignOptions);
 }
 
 /**
